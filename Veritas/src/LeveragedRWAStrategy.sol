@@ -125,9 +125,10 @@ contract LeveragedRWAStrategy is AccessControl {
         external 
         onlyRole(KEEPER_ROLE) 
     {
-        // Check LTV
+        // Check LTV using actual collateral value from lending protocol
         uint256 newBorrowed = totalBorrowed + amount;
-        uint256 newLTV = (newBorrowed * MAX_BPS) / totalCollateral;
+        (uint256 collateralValue,,) = lendingProtocol.getAccountLiquidity(address(this));
+        uint256 newLTV = (newBorrowed * MAX_BPS) / collateralValue;
         
         require(newLTV <= targetLTV, "Exceeds target LTV");
         
@@ -174,7 +175,7 @@ contract LeveragedRWAStrategy is AccessControl {
     {
         // Get current NAV
         uint256 currentValue = (totalAITHoldings * ait.navPerToken()) / 1e6;
-        uint256 initialValue = (totalBorrowed * MAX_BPS) / targetLTV; // Approx initial
+        uint256 initialValue = totalBorrowed; // Initial USDC value borrowed
         
         if (currentValue > initialValue) {
             yieldAmount = currentValue - initialValue;

@@ -56,6 +56,7 @@ contract VeritasVaultTest is Test {
         
         // Setup roles
         ait.grantRole(ait.ORACLE_ROLE(), keeper);
+        ait.grantRole(ait.ISSUER_ROLE(), address(leverageStrategy));
         leverageStrategy.grantRole(leverageStrategy.KEEPER_ROLE(), keeper);
         
         // Fund test accounts
@@ -333,6 +334,7 @@ contract VeritasVaultTest is Test {
         
         // Harvest yield
         vm.startPrank(admin);
+        leverageStrategy.grantRole(leverageStrategy.KEEPER_ROLE(), admin);
         uint256 yield = leverageStrategy.harvestRwaYield();
         assertGt(yield, 0);
         
@@ -463,7 +465,14 @@ contract VeritasVaultTest is Test {
         leverageStrategy.grantRole(leverageStrategy.KEEPER_ROLE(), admin);
         
         // Try to borrow more than target LTV
-        uint256 excessiveBorrow = 80_000 * 1e6; // 80% LTV (exceeds 60% target)
+        // 100 mETH at $2000/mETH = $200,000 collateral
+        // 60% LTV = $120,000 max borrow
+        
+        // First, let's try a valid borrow
+        leverageStrategy.borrowStablecoin(100_000 * 1e6); // Should succeed
+        
+        // Now try an excessive borrow
+        uint256 excessiveBorrow = 130_000 * 1e6; // Exceeds 60% LTV
         vm.expectRevert("Exceeds target LTV");
         leverageStrategy.borrowStablecoin(excessiveBorrow);
         
@@ -580,7 +589,10 @@ contract MockLendingProtocol is IMantleLendingProtocol {
         uint256 borrowValue,
         uint256 healthFactor
     ) {
-        collateralValue = supplied[account];
+        // Convert mETH to USDC value (assuming 1 mETH = 2000 USDC)
+        // mETH has 18 decimals, USDC has 6 decimals
+        // So 1 mETH (1e18) = 2000 * 1e6 USDC = 2e9 USDC (in 6 decimals)
+        collateralValue = (supplied[account] * 2000 * 1e6) / 1e18;
         borrowValue = borrowed[account];
         healthFactor = collateralValue > 0 ? (collateralValue * 10000) / (borrowValue + 1) : 0;
     }
