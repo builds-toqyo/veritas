@@ -32,6 +32,7 @@ contract VeritasVaultTest is Test {
     
     // Constants
     uint256 constant INITIAL_BALANCE = 1_000_000 * 1e6; // 1M USDC
+    uint256 constant INITIAL_METH_BALANCE = 1_000 * 1e18; // 1K mETH
     
     function setUp() public {
         vm.startPrank(admin);
@@ -58,7 +59,7 @@ contract VeritasVaultTest is Test {
         leverageStrategy.grantRole(leverageStrategy.KEEPER_ROLE(), keeper);
         
         // Fund test accounts
-        mETH.mint(admin, INITIAL_BALANCE);
+        mETH.mint(admin, INITIAL_METH_BALANCE);
         usdc.mint(admin, INITIAL_BALANCE);
         usdc.mint(address(lendingProtocol), INITIAL_BALANCE * 10); // Protocol liquidity
         
@@ -73,7 +74,7 @@ contract VeritasVaultTest is Test {
         vm.startPrank(admin);
         
         // Issue retail KYC
-        kycVerifier.issueKYC(
+        kycVerifier.issueKyc(
             retailInvestor,
             TieredKYCVerifier.InvestorTier.RETAIL,
             365, // 1 year validity
@@ -83,7 +84,7 @@ contract VeritasVaultTest is Test {
         
         // Verify tier
         assertEq(uint(kycVerifier.getTier(retailInvestor)), uint(TieredKYCVerifier.InvestorTier.RETAIL));
-        assertTrue(kycVerifier.hasValidKYC(retailInvestor));
+        assertTrue(kycVerifier.hasValidKyc(retailInvestor));
         
         // Check investment cap
         uint256 remainingCap = kycVerifier.getRemainingCapacity(retailInvestor);
@@ -96,7 +97,7 @@ contract VeritasVaultTest is Test {
         vm.startPrank(admin);
         
         // Issue retail KYC
-        kycVerifier.issueKYC(
+        kycVerifier.issueKyc(
             retailInvestor,
             TieredKYCVerifier.InvestorTier.RETAIL,
             365,
@@ -118,7 +119,7 @@ contract VeritasVaultTest is Test {
         vm.startPrank(admin);
         
         // Issue retail KYC
-        kycVerifier.issueKYC(
+        kycVerifier.issueKyc(
             retailInvestor,
             TieredKYCVerifier.InvestorTier.RETAIL,
             365,
@@ -179,7 +180,7 @@ contract VeritasVaultTest is Test {
         assertEq(oldNAV, 1e6); // $1.00 initial
         
         // Update NAV to $1.05 (5% appreciation)
-        ait.updateNAV(1.05e6);
+        ait.updateNav(1.05e6);
         
         assertEq(ait.navPerToken(), 1.05e6);
         
@@ -301,7 +302,7 @@ contract VeritasVaultTest is Test {
         ait.setWhitelist(address(leverageStrategy), true);
         
         // Deploy to RWA
-        leverageStrategy.deployToRWA(borrowAmount);
+        leverageStrategy.deployToRwa(borrowAmount);
         
         assertGt(leverageStrategy.totalAITHoldings(), 0);
         
@@ -321,18 +322,18 @@ contract VeritasVaultTest is Test {
         leverageStrategy.borrowStablecoin(borrowAmount);
         
         ait.setWhitelist(address(leverageStrategy), true);
-        leverageStrategy.deployToRWA(borrowAmount);
+        leverageStrategy.deployToRwa(borrowAmount);
         
         vm.stopPrank();
         
         // Simulate yield accrual by updating NAV
         vm.startPrank(keeper);
-        ait.updateNAV(1.08e6); // 8% appreciation
+        ait.updateNav(1.08e6); // 8% appreciation
         vm.stopPrank();
         
         // Harvest yield
         vm.startPrank(admin);
-        uint256 yield = leverageStrategy.harvestRWAYield();
+        uint256 yield = leverageStrategy.harvestRwaYield();
         assertGt(yield, 0);
         
         vm.stopPrank();
@@ -351,7 +352,7 @@ contract VeritasVaultTest is Test {
         leverageStrategy.borrowStablecoin(borrowAmount);
         
         ait.setWhitelist(address(leverageStrategy), true);
-        leverageStrategy.deployToRWA(borrowAmount);
+        leverageStrategy.deployToRwa(borrowAmount);
         
         // Simulate health factor drop (mock)
         // In real test, would manipulate lending protocol state
@@ -366,7 +367,7 @@ contract VeritasVaultTest is Test {
     function test_FullUserJourney() public {
         // 1. Issue KYC
         vm.startPrank(admin);
-        kycVerifier.issueKYC(
+        kycVerifier.issueKyc(
             accreditedInvestor,
             TieredKYCVerifier.InvestorTier.ACCREDITED,
             365,
@@ -383,7 +384,7 @@ contract VeritasVaultTest is Test {
         // 5. Yield accrues and is harvested
         // 6. Investor withdraws with profit
         
-        assertTrue(kycVerifier.hasValidKYC(accreditedInvestor));
+        assertTrue(kycVerifier.hasValidKyc(accreditedInvestor));
     }
     
     function test_MLModelAllocationAdjustment() public pure {
@@ -406,7 +407,7 @@ contract VeritasVaultTest is Test {
         vm.startPrank(admin);
         
         // Setup investor
-        kycVerifier.issueKYC(
+        kycVerifier.issueKyc(
             accreditedInvestor,
             TieredKYCVerifier.InvestorTier.ACCREDITED,
             365,
@@ -428,7 +429,7 @@ contract VeritasVaultTest is Test {
         vm.startPrank(retailInvestor); // Not admin
         
         vm.expectRevert(); // Expect AccessControl revert
-        kycVerifier.issueKYC(
+        kycVerifier.issueKyc(
             retailInvestor,
             TieredKYCVerifier.InvestorTier.RETAIL,
             365,
@@ -439,19 +440,20 @@ contract VeritasVaultTest is Test {
         vm.stopPrank();
     }
     
-    function testFail_AITTransferToNonWhitelisted() public {
+    function test_RevertWhen_AITTransferToNonWhitelisted() public {
         vm.startPrank(admin);
         
         ait.setWhitelist(admin, true);
         ait.mint(admin, 1000 * 1e6);
         
         // Try to transfer to non-whitelisted address (should fail)
-        require(ait.transfer(retailInvestor, 100 * 1e6), "Transfer should fail");
+        vm.expectRevert("AIT: Recipient not whitelisted");
+        ait.transfer(retailInvestor, 100 * 1e6);
         
         vm.stopPrank();
     }
     
-    function testFail_ExceedLeverageLTV() public {
+    function test_RevertWhen_ExceedLeverageLTV() public {
         vm.startPrank(admin);
         
         uint256 collateralAmount = 100 * 1e18;
@@ -462,6 +464,7 @@ contract VeritasVaultTest is Test {
         
         // Try to borrow more than target LTV
         uint256 excessiveBorrow = 80_000 * 1e6; // 80% LTV (exceeds 60% target)
+        vm.expectRevert("Exceeds target LTV");
         leverageStrategy.borrowStablecoin(excessiveBorrow);
         
         vm.stopPrank();
@@ -471,7 +474,7 @@ contract VeritasVaultTest is Test {
         vm.startPrank(admin);
         
         // Issue KYC with 1 day validity
-        kycVerifier.issueKYC(
+        kycVerifier.issueKyc(
             retailInvestor,
             TieredKYCVerifier.InvestorTier.RETAIL,
             1, // 1 day
@@ -479,12 +482,12 @@ contract VeritasVaultTest is Test {
             keccak256(abi.encodePacked(retailInvestor))
         );
         
-        assertTrue(kycVerifier.hasValidKYC(retailInvestor));
+        assertTrue(kycVerifier.hasValidKyc(retailInvestor));
         
         // Fast forward 2 days
         vm.warp(block.timestamp + 2 days);
         
-        assertFalse(kycVerifier.hasValidKYC(retailInvestor));
+        assertFalse(kycVerifier.hasValidKyc(retailInvestor));
         
         vm.stopPrank();
     }
@@ -532,6 +535,9 @@ contract MockERC20 {
     }
     
     function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        require(allowance[from][msg.sender] >= amount, "ERC20: insufficient allowance");
+        require(balanceOf[from] >= amount, "ERC20: transfer exceeds balance");
+        
         allowance[from][msg.sender] -= amount;
         balanceOf[from] -= amount;
         balanceOf[to] += amount;

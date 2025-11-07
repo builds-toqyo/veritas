@@ -135,7 +135,7 @@ contract SetupDemo is Script {
         console.log("Setting up demo investors...");
         
         // Issue KYC for demo investors
-        kyc.issueKYC(
+        kyc.issueKyc(
             demoRetail,
             TieredKYCVerifier.InvestorTier.RETAIL,
             365,
@@ -144,7 +144,7 @@ contract SetupDemo is Script {
         );
         console.log("- Retail investor KYC issued:", demoRetail);
         
-        kyc.issueKYC(
+        kyc.issueKyc(
             demoAccredited,
             TieredKYCVerifier.InvestorTier.ACCREDITED,
             365,
@@ -153,7 +153,7 @@ contract SetupDemo is Script {
         );
         console.log("- Accredited investor KYC issued:", demoAccredited);
         
-        kyc.issueKYC(
+        kyc.issueKyc(
             demoInstitutional,
             TieredKYCVerifier.InvestorTier.INSTITUTIONAL,
             365,
