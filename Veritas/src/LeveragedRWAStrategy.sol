@@ -86,6 +86,12 @@ contract LeveragedRWAStrategy is AccessControl {
         lendingProtocol = IMantleLendingProtocol(_lendingProtocol);
         ait = VeritasInvoiceToken(_ait);
         
+        // Initialize state variables
+        totalCollateral = 0;
+        totalBorrowed = 0;
+        totalAITHoldings = 0;
+        currentHealthFactor = 0;
+        
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(VAULT_ROLE, msg.sender);
     }
@@ -138,7 +144,7 @@ contract LeveragedRWAStrategy is AccessControl {
      * @notice Deploy borrowed USDC to RWA (buy AIT tokens)
      * @param usdcAmount Amount to deploy
      */
-    function deployToRWA(uint256 usdcAmount) 
+    function deployToRwa(uint256 usdcAmount) 
         external 
         onlyRole(KEEPER_ROLE) 
     {
@@ -161,7 +167,7 @@ contract LeveragedRWAStrategy is AccessControl {
      * @notice Harvest yield from AIT holdings
      * @dev Yield comes from invoice payments distributed to AIT holders
      */
-    function harvestRWAYield() 
+    function harvestRwaYield() 
         external 
         onlyRole(KEEPER_ROLE) 
         returns (uint256 yieldAmount) 

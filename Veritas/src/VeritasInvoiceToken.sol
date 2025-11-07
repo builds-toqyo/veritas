@@ -95,7 +95,7 @@ contract VeritasInvoiceToken is IERC20, AccessControl {
      * @dev Called by oracle after invoice payments/defaults
      * @param newNav New net asset value per token
      */
-    function updateNAV(uint256 newNav) external onlyRole(ORACLE_ROLE) {
+    function updateNav(uint256 newNav) external onlyRole(ORACLE_ROLE) {
         uint256 oldNav = navPerToken;
         navPerToken = newNav;
         lastNavUpdate = block.timestamp;

@@ -19,7 +19,7 @@ contract TieredKYCVerifier is AccessControl {
         INSTITUTIONAL   // 4 - Institutional (unlimited)
     }
     
-    struct KYCProfile {
+    struct KycProfile {
         InvestorTier tier;
         uint256 investmentCap;  // Max investment in USDC
         uint256 currentInvestment; // Current position
@@ -30,7 +30,7 @@ contract TieredKYCVerifier is AccessControl {
         bytes32 kycIdHash; // Privacy-preserving identifier
     }
     
-    mapping(address => KYCProfile) public kycProfiles;
+    mapping(address => KycProfile) public kycProfiles;
     
     // Default caps per tier (in USDC, scaled by 1e6)
     mapping(InvestorTier => uint256) public tierCaps;
@@ -54,7 +54,7 @@ contract TieredKYCVerifier is AccessControl {
     /**
      * @notice Issue tiered KYC to investor
      */
-    function issueKYC(
+    function issueKyc(
         address investor,
         InvestorTier tier,
         uint256 validityDays,
@@ -63,7 +63,7 @@ contract TieredKYCVerifier is AccessControl {
     ) external onlyRole(KYC_ISSUER) {
         require(tier != InvestorTier.NONE, "Invalid tier");
         
-        kycProfiles[investor] = KYCProfile({
+        kycProfiles[investor] = KycProfile({
             tier: tier,
             investmentCap: tierCaps[tier],
             currentInvestment: 0,
@@ -85,7 +85,7 @@ contract TieredKYCVerifier is AccessControl {
         view 
         returns (bool, string memory reason) 
     {
-        KYCProfile memory profile = kycProfiles[investor];
+        KycProfile memory profile = kycProfiles[investor];
         
         if (profile.tier == InvestorTier.NONE) {
             return (false, "No KYC");
@@ -107,7 +107,7 @@ contract TieredKYCVerifier is AccessControl {
      * @notice Record investment (called by vault)
      */
     function recordInvestment(address investor, uint256 amount) external {
-        KYCProfile storage profile = kycProfiles[investor];
+        KycProfile storage profile = kycProfiles[investor];
         require(profile.currentInvestment + amount <= profile.investmentCap, "Exceeds cap");
         
         profile.currentInvestment += amount;
@@ -122,7 +122,7 @@ contract TieredKYCVerifier is AccessControl {
         external 
         onlyRole(KYC_ISSUER) 
     {
-        KYCProfile storage profile = kycProfiles[investor];
+        KycProfile storage profile = kycProfiles[investor];
         require(newTier > profile.tier, "Not an upgrade");
         
         InvestorTier oldTier = profile.tier;
@@ -135,7 +135,7 @@ contract TieredKYCVerifier is AccessControl {
     /**
      * @notice Revoke KYC
      */
-    function revokeKYC(address investor, string calldata reason) 
+    function revokeKyc(address investor, string calldata reason) 
         external 
         onlyRole(KYC_ISSUER) 
     {
@@ -146,8 +146,8 @@ contract TieredKYCVerifier is AccessControl {
     /**
      * @notice Check if investor has valid KYC
      */
-    function hasValidKYC(address investor) external view returns (bool) {
-        KYCProfile memory profile = kycProfiles[investor];
+    function hasValidKyc(address investor) external view returns (bool) {
+        KycProfile memory profile = kycProfiles[investor];
         return profile.tier != InvestorTier.NONE 
             && !profile.revoked 
             && block.timestamp <= profile.expiresAt;
@@ -164,7 +164,7 @@ contract TieredKYCVerifier is AccessControl {
      * @notice Get remaining investment capacity
      */
     function getRemainingCapacity(address investor) external view returns (uint256) {
-        KYCProfile memory profile = kycProfiles[investor];
+        KycProfile memory profile = kycProfiles[investor];
         if (profile.currentInvestment >= profile.investmentCap) {
             return 0;
         }
