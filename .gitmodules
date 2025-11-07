@@ -1,0 +1,3 @@
+[submodule "Veritas/lib/openzeppelin-contracts"]
+	path = Veritas/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
