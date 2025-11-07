@@ -232,7 +232,7 @@ contract LeveragedRWAStrategy is AccessControl {
      * @notice Update health factor from lending protocol
      */
     function _updateHealthFactor() internal {
-        (uint256 collateralValue, uint256 borrowValue, uint256 hf) = 
+        (, , uint256 hf) = 
             lendingProtocol.getAccountLiquidity(address(this));
         
         uint256 oldHF = currentHealthFactor;
