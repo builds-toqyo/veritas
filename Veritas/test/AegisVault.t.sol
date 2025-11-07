@@ -386,21 +386,17 @@ contract VeritasVaultTest is Test {
         assertTrue(kycVerifier.hasValidKYC(accreditedInvestor));
     }
     
-    function test_MLModelAllocationAdjustment() public {
+    function test_MLModelAllocationAdjustment() public pure {
         // Simulate ML model updating allocation based on risk scores
         // This would integrate with the ML API in production
         
         // High risk scenario: reduce RWA allocation
-        uint256 highRiskScore = 8000; // 80% risk
-        uint256 lowLiquidityScore = 3000; // 30% liquidity
-        
         // Expected: allocation should decrease
         
         // Low risk scenario: increase RWA allocation
-        uint256 lowRiskScore = 2000; // 20% risk
-        uint256 highLiquidityScore = 9000; // 90% liquidity
-        
         // Expected: allocation should increase
+        
+        // Note: Full implementation would call vault.updateMLModel()
     }
     
     function test_TaxEventEmission() public {
@@ -428,9 +424,10 @@ contract VeritasVaultTest is Test {
     // TEST 5: Edge Cases & Security
     // ========================================================================
     
-    function testFail_UnauthorizedKYCIssuance() public {
+    function test_RevertWhen_UnauthorizedKYCIssuance() public {
         vm.startPrank(retailInvestor); // Not admin
         
+        vm.expectRevert(); // Expect AccessControl revert
         kycVerifier.issueKYC(
             retailInvestor,
             TieredKYCVerifier.InvestorTier.RETAIL,
@@ -442,19 +439,20 @@ contract VeritasVaultTest is Test {
         vm.stopPrank();
     }
     
-    function testFail_AITTransferToNonWhitelisted() public {
+    function test_RevertWhen_AITTransferToNonWhitelisted() public {
         vm.startPrank(admin);
         
         ait.setWhitelist(admin, true);
         ait.mint(admin, 1000 * 1e6);
         
-        // Try to transfer to non-whitelisted address
+        // Try to transfer to non-whitelisted address (should fail)
+        vm.expectRevert("AIT: Recipient not whitelisted");
         ait.transfer(retailInvestor, 100 * 1e6);
         
         vm.stopPrank();
     }
     
-    function testFail_ExceedLeverageLTV() public {
+    function test_RevertWhen_ExceedLeverageLTV() public {
         vm.startPrank(admin);
         
         uint256 collateralAmount = 100 * 1e18;
@@ -465,6 +463,7 @@ contract VeritasVaultTest is Test {
         
         // Try to borrow more than target LTV
         uint256 excessiveBorrow = 80_000 * 1e6; // 80% LTV (exceeds 60% target)
+        vm.expectRevert("Exceeds target LTV");
         leverageStrategy.borrowStablecoin(excessiveBorrow);
         
         vm.stopPrank();
@@ -553,23 +552,23 @@ contract MockLendingProtocol is IMantleLendingProtocol {
     }
     
     function supply(address asset, uint256 amount) external {
-        IERC20(asset).transferFrom(msg.sender, address(this), amount);
+        require(IERC20(asset).transferFrom(msg.sender, address(this), amount), "Transfer failed");
         supplied[msg.sender] += amount;
     }
     
     function borrow(address asset, uint256 amount) external {
         borrowed[msg.sender] += amount;
-        IERC20(asset).transfer(msg.sender, amount);
+        require(IERC20(asset).transfer(msg.sender, amount), "Transfer failed");
     }
     
     function repay(address asset, uint256 amount) external {
-        IERC20(asset).transferFrom(msg.sender, address(this), amount);
+        require(IERC20(asset).transferFrom(msg.sender, address(this), amount), "Transfer failed");
         borrowed[msg.sender] -= amount;
     }
     
     function withdraw(address asset, uint256 amount) external {
         supplied[msg.sender] -= amount;
-        IERC20(asset).transfer(msg.sender, amount);
+        require(IERC20(asset).transfer(msg.sender, amount), "Transfer failed");
     }
     
     function getAccountLiquidity(address account) external view returns (
