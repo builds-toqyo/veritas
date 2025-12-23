@@ -18,16 +18,18 @@ export function HeroSection() {
         <div className='flex flex-col items-center gap-8 text-center mx-auto max-w-3xl'>
           <motion.h1 
             variants={fadeIn}
-            className='text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl text-white'
+            className='text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl'
+            style={{color: '#f7e9e9'}}
           >
             Real-Time Risk Assessment for{' '}
-            <span className='bg-gradient-to-r from-white to-[#373b3b] bg-clip-text text-transparent'>
+            <span className='text-gradient'>
               Veritas Vault
             </span>
           </motion.h1>
           <motion.p 
             variants={fadeIn}
-            className='mx-auto max-w-[700px] text-lg text-[#373b3b] md:text-xl'
+            className='mx-auto max-w-[700px] text-lg md:text-xl'
+            style={{color: '#aaa4a5'}}
           >
             Advanced ML-powered risk analysis and monitoring system for DeFi operations.
           </motion.p>
@@ -36,7 +38,8 @@ export function HeroSection() {
               <Button 
                 asChild 
                 size='lg' 
-                className='bg-[#373b3b] text-white hover:bg-black/80 transition-colors duration-300'
+                className='transition-colors duration-300'
+                style={{backgroundColor: '#aaa4a5', color: '#f7e9e9'}}
               >
                 <Link href='/dashboard'>Launch Dashboard</Link>
               </Button>
