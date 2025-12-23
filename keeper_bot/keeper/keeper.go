@@ -130,8 +130,8 @@ func New(config *Config) (*Bot, error) {
 }
 
 // MonitorLeverageStrategy monitors the leveraged RWA strategy
-func (k *VeritasKeeper) MonitorLeverageStrategy(ctx context.Context) error {
-	k.logger.Info("Monitoring leverage strategy health...")
+func (b *Bot) MonitorLeverageStrategy(ctx context.Context) error {
+	b.logger.Info("Monitoring leverage strategy health...")
 
 	// Get position data from contract (simplified - would use contract bindings)
 	positionData := map[string]interface{}{
@@ -142,7 +142,7 @@ func (k *VeritasKeeper) MonitorLeverageStrategy(ctx context.Context) error {
 	}
 
 	// Call ML engine for risk assessment
-	response, err := k.callMLAPI("/api/v1/leverage-health", positionData)
+	response, err := b.callMLAPI("/api/v1/leverage-health", positionData)
 	if err != nil {
 		return fmt.Errorf("ML API call failed: %w", err)
 	}
@@ -152,27 +152,27 @@ func (k *VeritasKeeper) MonitorLeverageStrategy(ctx context.Context) error {
 		return fmt.Errorf("failed to parse ML response: %w", err)
 	}
 
-	k.logger.WithFields(logrus.Fields{
+	b.logger.WithFields(logrus.Fields{
 		"risk_level": healthResp.RiskLevel,
 		"risk_score": healthResp.CompositeRiskScore,
 	}).Info("Risk assessment completed")
 
 	// Execute actions based on recommendations
-	return k.executeRiskActions(ctx, &healthResp)
+	return b.executeRiskActions(ctx, &healthResp)
 }
 
 // executeRiskActions performs risk management actions
-func (k *VeritasKeeper) executeRiskActions(ctx context.Context, assessment *LeverageHealthResponse) error {
+func (b *Bot) executeRiskActions(ctx context.Context, assessment *LeverageHealthResponse) error {
 	for _, recommendation := range assessment.Recommendations {
 		switch recommendation {
 		case "EMERGENCY_DELEVERAGE":
-			k.logger.Warn("EMERGENCY DELEVERAGING TRIGGERED")
-			return k.emergencyDeleverage(ctx)
+			b.logger.Warn("EMERGENCY DELEVERAGING TRIGGERED")
+			return b.emergencyDeleverage(ctx)
 		case "REDUCE_LEVERAGE":
-			k.logger.Info("Reducing leverage position")
-			return k.reduceLeverage(ctx)
+			b.logger.Info("Reducing leverage position")
+			return b.reduceLeverage(ctx)
 		case "PAUSE_NEW_POSITIONS":
-			k.logger.Info("Pausing new positions due to low liquidity")
+			b.logger.Info("Pausing new positions due to low liquidity")
 			// Implementation would pause new borrowing
 		}
 	}
@@ -180,33 +180,33 @@ func (k *VeritasKeeper) executeRiskActions(ctx context.Context, assessment *Leve
 }
 
 // emergencyDeleverage executes emergency deleveraging
-func (k *VeritasKeeper) emergencyDeleverage(ctx context.Context) error {
-	auth, err := k.getTransactOpts(ctx)
+func (b *Bot) emergencyDeleverage(ctx context.Context) error {
+	auth, err := b.getTransactOpts(ctx)
 	if err != nil {
 		return err
 	}
 
 	// In production: call emergencyDeleverage on LeveragedRWAStrategy contract
-	k.logger.WithField("nonce", auth.Nonce).Info("Emergency deleverage transaction sent")
-	k.emergencyMode = true
+	b.logger.WithField("nonce", auth.Nonce).Info("Emergency deleverage transaction sent")
+	b.emergencyMode = true
 	return nil
 }
 
 // reduceLeverage gradually reduces leverage
-func (k *VeritasKeeper) reduceLeverage(ctx context.Context) error {
-	auth, err := k.getTransactOpts(ctx)
+func (b *Bot) reduceLeverage(ctx context.Context) error {
+	auth, err := b.getTransactOpts(ctx)
 	if err != nil {
 		return err
 	}
 
 	// In production: call harvestRwaYield and repayDebt
-	k.logger.WithField("nonce", auth.Nonce).Info("Leverage reduction transaction sent")
+	b.logger.WithField("nonce", auth.Nonce).Info("Leverage reduction transaction sent")
 	return nil
 }
 
 // UpdateInvoiceNAV updates NAV for VeritasInvoiceToken
-func (k *VeritasKeeper) UpdateInvoiceNAV(ctx context.Context) error {
-	k.logger.Info("Updating invoice token NAV...")
+func (b *Bot) UpdateInvoiceNAV(ctx context.Context) error {
+	b.logger.Info("Updating invoice token NAV...")
 
 	// Get pool data from contract (mock data)
 	navData := map[string]interface{}{
@@ -219,7 +219,7 @@ func (k *VeritasKeeper) UpdateInvoiceNAV(ctx context.Context) error {
 		"totalSupply":      4800000,
 	}
 
-	response, err := k.callMLAPI("/api/v1/invoice-nav-prediction", navData)
+	response, err := b.callMLAPI("/api/v1/invoice-nav-prediction", navData)
 	if err != nil {
 		return fmt.Errorf("NAV prediction failed: %w", err)
 	}
@@ -229,23 +229,23 @@ func (k *VeritasKeeper) UpdateInvoiceNAV(ctx context.Context) error {
 		return fmt.Errorf("failed to parse NAV response: %w", err)
 	}
 
-	k.logger.WithFields(logrus.Fields{
+	b.logger.WithFields(logrus.Fields{
 		"predicted_nav": navResp.PredictedNAV,
 		"confidence":    navResp.Confidence,
 	}).Info("NAV prediction completed")
 
 	// Update NAV if confidence is high enough
 	if navResp.Confidence > 0.7 {
-		return k.updateNAVOnChain(ctx, navResp.PredictedNAV)
+		return b.updateNAVOnChain(ctx, navResp.PredictedNAV)
 	}
 
-	k.logger.Warn("Low confidence NAV prediction, skipping update")
+	b.logger.Warn("Low confidence NAV prediction, skipping update")
 	return nil
 }
 
 // updateNAVOnChain updates NAV on the smart contract
-func (k *VeritasKeeper) updateNAVOnChain(ctx context.Context, newNAV float64) error {
-	auth, err := k.getTransactOpts(ctx)
+func (b *Bot) updateNAVOnChain(ctx context.Context, newNAV float64) error {
+	auth, err := b.getTransactOpts(ctx)
 	if err != nil {
 		return err
 	}
@@ -254,7 +254,7 @@ func (k *VeritasKeeper) updateNAVOnChain(ctx context.Context, newNAV float64) er
 	navWei := big.NewInt(int64(newNAV * 1e6))
 
 	// In production: call updateNav on VeritasInvoiceToken contract
-	k.logger.WithFields(logrus.Fields{
+	b.logger.WithFields(logrus.Fields{
 		"nav_wei": navWei.String(),
 		"nonce":   auth.Nonce,
 	}).Info("NAV update transaction sent")
@@ -263,8 +263,8 @@ func (k *VeritasKeeper) updateNAVOnChain(ctx context.Context, newNAV float64) er
 }
 
 // MonitorKYCCompliance monitors KYC compliance
-func (k *VeritasKeeper) MonitorKYCCompliance(ctx context.Context) error {
-	k.logger.Info("Monitoring KYC compliance...")
+func (b *Bot) MonitorKYCCompliance(ctx context.Context) error {
+	b.logger.Info("Monitoring KYC compliance...")
 
 	// Mock investment data - in production would get from contract events
 	investments := []map[string]interface{}{
@@ -279,20 +279,20 @@ func (k *VeritasKeeper) MonitorKYCCompliance(ctx context.Context) error {
 	}
 
 	for _, investment := range investments {
-		response, err := k.callMLAPI("/api/v1/kyc-risk-assessment", investment)
+		response, err := b.callMLAPI("/api/v1/kyc-risk-assessment", investment)
 		if err != nil {
-			k.logger.WithError(err).Error("KYC risk assessment failed")
+			b.logger.WithError(err).Error("KYC risk assessment failed")
 			continue
 		}
 
 		var kycResp KYCRiskResponse
 		if err := json.Unmarshal(response, &kycResp); err != nil {
-			k.logger.WithError(err).Error("Failed to parse KYC response")
+			b.logger.WithError(err).Error("Failed to parse KYC response")
 			continue
 		}
 
 		if kycResp.RiskClassification == "HIGH_RISK" {
-			k.logger.WithFields(logrus.Fields{
+			b.logger.WithFields(logrus.Fields{
 				"risk_score":     kycResp.KYCRiskScore,
 				"classification": kycResp.RiskClassification,
 				"flags":          kycResp.ComplianceFlags,
@@ -304,14 +304,14 @@ func (k *VeritasKeeper) MonitorKYCCompliance(ctx context.Context) error {
 }
 
 // callMLAPI makes HTTP calls to the ML engine
-func (k *VeritasKeeper) callMLAPI(endpoint string, data interface{}) ([]byte, error) {
+func (b *Bot) callMLAPI(endpoint string, data interface{}) ([]byte, error) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := k.httpClient.Post(
-		k.config.MLAPIEndpoint+endpoint,
+	resp, err := b.httpClient.Post(
+		b.config.MLAPIEndpoint+endpoint,
 		"application/json",
 		bytes.NewBuffer(jsonData),
 	)
@@ -333,59 +333,59 @@ func (k *VeritasKeeper) callMLAPI(endpoint string, data interface{}) ([]byte, er
 }
 
 // getTransactOpts creates transaction options
-func (k *VeritasKeeper) getTransactOpts(ctx context.Context) (*bind.TransactOpts, error) {
-	nonce, err := k.client.PendingNonceAt(ctx, k.address)
+func (b *Bot) getTransactOpts(ctx context.Context) (*bind.TransactOpts, error) {
+	nonce, err := b.client.PendingNonceAt(ctx, b.address)
 	if err != nil {
 		return nil, err
 	}
 
-	gasPrice, err := k.client.SuggestGasPrice(ctx)
+	gasPrice, err := b.client.SuggestGasPrice(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	auth, err := bind.NewKeyedTransactorWithChainID(k.privateKey, k.chainID)
+	auth, err := bind.NewKeyedTransactorWithChainID(b.privateKey, b.chainID)
 	if err != nil {
 		return nil, err
 	}
 
 	auth.Nonce = big.NewInt(int64(nonce))
 	auth.Value = big.NewInt(0)
-	auth.GasLimit = k.config.GasLimit
+	auth.GasLimit = b.config.GasLimit
 	auth.GasPrice = gasPrice
 
 	return auth, nil
 }
 
 // HealthCheck performs system health check
-func (k *VeritasKeeper) HealthCheck(ctx context.Context) error {
+func (b *Bot) HealthCheck(ctx context.Context) error {
 	// Check ML engine health
-	resp, err := k.httpClient.Get(k.config.MLAPIEndpoint + "/health")
+	resp, err := b.httpClient.Get(b.config.MLAPIEndpoint + "/health")
 	if err != nil {
-		k.logger.WithError(err).Error("ML engine health check failed")
+		b.logger.WithError(err).Error("ML engine health check failed")
 	} else {
 		resp.Body.Close()
-		k.logger.Info("ML engine health check: OK")
+		b.logger.Info("ML engine health check: OK")
 	}
 
 	// Check blockchain connection
-	latestBlock, err := k.client.BlockNumber(ctx)
+	latestBlock, err := b.client.BlockNumber(ctx)
 	if err != nil {
-		k.logger.WithError(err).Error("Blockchain connection failed")
+		b.logger.WithError(err).Error("Blockchain connection failed")
 	} else {
-		k.logger.WithField("block", latestBlock).Info("Blockchain connection: OK")
+		b.logger.WithField("block", latestBlock).Info("Blockchain connection: OK")
 	}
 
 	// Check account balance
-	balance, err := k.client.BalanceAt(ctx, k.address, nil)
+	balance, err := b.client.BalanceAt(ctx, b.address, nil)
 	if err != nil {
-		k.logger.WithError(err).Error("Failed to get account balance")
+		b.logger.WithError(err).Error("Failed to get account balance")
 	} else {
 		ethBalance := new(big.Float).Quo(new(big.Float).SetInt(balance), big.NewFloat(1e18))
-		k.logger.WithField("balance", ethBalance).Info("Account balance checked")
+		b.logger.WithField("balance", ethBalance).Info("Account balance checked")
 
 		if balance.Cmp(big.NewInt(1e17)) < 0 { // Less than 0.1 ETH
-			k.logger.Warn("LOW KEEPER ACCOUNT BALANCE - REFILL NEEDED")
+			b.logger.Warn("LOW KEEPER ACCOUNT BALANCE - REFILL NEEDED")
 		}
 	}
 
