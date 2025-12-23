@@ -47,7 +47,7 @@ export function FeaturesSection() {
             }
           ].map((feature, index) => (
             <motion.div key={index} variants={fadeIn}>
-              <Card className='bg-card border-light shadow-card rounded-lg p-6'>
+              <Card className='bg-card border-muted shadow-card rounded-lg p-6'>
                 <CardHeader>
                   <CardTitle className='card-title'>{feature.title}</CardTitle>
                   <CardDescription className='card-description'>

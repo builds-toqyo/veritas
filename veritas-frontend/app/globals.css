@@ -1,49 +1,49 @@
 @import "tailwindcss";
 
 @theme {
-  --color-night-white: #E2E0DE;
-  --color-elysium-gold: #D19502;
-  --color-viola: #9271B8;
-  --color-cookie-dough: #A57001;
-  --color-royal-lilac: #7F549F;
-  --color-deep-plum: #422B42;
+  --color-birth-star: #fce9e0;
+  --color-desert-mesa: #edcebc;
+  --color-priceless-coral: #e6aa89;
+  --color-peach-fury: #f6823a;
+  --color-patchwork-plum: #7c686c;
+  --color-vantablack: #020101;
   --radius-default: 0.5rem;
 }
 
 /* Base Styles */
 * {
-  border-color: var(--color-cookie-dough);
+  border-color: var(--color-desert-mesa);
 }
 
 body {
-  background-color: var(--color-night-white);
-  color: var(--color-deep-plum);
+  background-color: var(--color-birth-star);
+  color: var(--color-vantablack);
   font-family: system-ui, -apple-system, sans-serif;
 }
 
 /* Typography Classes */
 .text-primary {
-  color: var(--color-deep-plum);
+  color: var(--color-vantablack);
 }
 
 .text-secondary {
-  color: var(--color-royal-lilac);
+  color: var(--color-patchwork-plum);
 }
 
 .text-muted {
-  color: var(--color-royal-lilac);
+  color: var(--color-patchwork-plum);
 }
 
 .text-accent {
-  color: var(--color-elysium-gold);
+  color: var(--color-peach-fury);
 }
 
 .text-light {
-  color: var(--color-night-white);
+  color: var(--color-birth-star);
 }
 
 .text-link {
-  color: var(--color-viola);
+  color: var(--color-priceless-coral);
   text-decoration: none;
 }
 
@@ -53,28 +53,28 @@ body {
 
 /* Background Classes */
 .bg-primary {
-  background-color: var(--color-deep-plum);
+  background-color: var(--color-vantablack);
 }
 
 .bg-secondary {
-  background-color: var(--color-viola);
+  background-color: var(--color-patchwork-plum);
 }
 
 .bg-accent {
-  background-color: var(--color-elysium-gold);
+  background-color: var(--color-peach-fury);
 }
 
 .bg-muted {
-  background-color: var(--color-cookie-dough);
+  background-color: var(--color-desert-mesa);
 }
 
 .bg-light {
-  background-color: var(--color-night-white);
+  background-color: var(--color-birth-star);
 }
 
 .bg-surface {
   background-color: #FFFFFF;
-  border: 1px solid var(--color-night-white);
+  border: 1px solid var(--color-desert-mesa);
 }
 
 .bg-card {
@@ -83,8 +83,8 @@ body {
 
 /* Button Classes */
 .btn-primary {
-  background-color: var(--color-elysium-gold);
-  color: var(--color-deep-plum);
+  background-color: var(--color-peach-fury);
+  color: var(--color-vantablack);
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius-default);
   font-weight: 600;
@@ -94,15 +94,15 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: var(--color-cookie-dough);
+  background-color: var(--color-priceless-coral);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
   background-color: transparent;
-  color: var(--color-viola);
+  color: var(--color-patchwork-plum);
   padding: 0.75rem 1.5rem;
-  border: 2px solid var(--color-viola);
+  border: 2px solid var(--color-patchwork-plum);
   border-radius: var(--radius-default);
   font-weight: 600;
   transition: all 0.3s ease;
@@ -110,17 +110,17 @@ body {
 }
 
 .btn-secondary:hover {
-  background-color: var(--color-viola);
-  color: var(--color-night-white);
+  background-color: var(--color-patchwork-plum);
+  color: var(--color-birth-star);
 }
 
 /* Card Classes */
 .card {
   background-color: #FFFFFF;
-  border: 1px solid var(--color-night-white);
+  border: 1px solid var(--color-desert-mesa);
   border-radius: var(--radius-default);
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(66, 43, 66, 0.08);
+  box-shadow: 0 2px 8px rgba(2, 1, 1, 0.08);
 }
 
 .card-header {
@@ -128,25 +128,25 @@ body {
 }
 
 .card-title {
-  color: var(--color-deep-plum);
+  color: var(--color-vantablack);
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
 }
 
 .card-description {
-  color: var(--color-royal-lilac);
+  color: var(--color-patchwork-plum);
   font-size: 0.875rem;
 }
 
 /* Navigation Classes */
 .nav-header {
-  background-color: var(--color-deep-plum);
-  border-bottom: 1px solid var(--color-cookie-dough);
+  background-color: var(--color-vantablack);
+  border-bottom: 1px solid var(--color-desert-mesa);
 }
 
 .nav-brand {
-  color: var(--color-elysium-gold);
+  color: var(--color-peach-fury);
   font-size: 1.5rem;
   font-weight: 700;
   text-decoration: none;
@@ -154,29 +154,29 @@ body {
 }
 
 .nav-brand:hover {
-  color: var(--color-night-white);
+  color: var(--color-birth-star);
 }
 
 .nav-link {
-  color: var(--color-night-white);
+  color: var(--color-birth-star);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s ease;
 }
 
 .nav-link:hover {
-  color: var(--color-elysium-gold);
+  color: var(--color-peach-fury);
 }
 
 /* Tab Classes */
 .tabs-list {
-  background-color: var(--color-cookie-dough);
+  background-color: var(--color-desert-mesa);
   border-radius: var(--radius-default);
   padding: 0.25rem;
 }
 
 .tab-trigger {
-  color: var(--color-deep-plum);
+  color: var(--color-vantablack);
   padding: 0.5rem 1rem;
   border-radius: calc(var(--radius-default) - 0.25rem);
   font-weight: 500;
@@ -187,18 +187,18 @@ body {
 }
 
 .tab-trigger:hover {
-  background-color: var(--color-night-white);
+  background-color: var(--color-birth-star);
 }
 
 .tab-trigger[data-state="active"] {
-  background-color: var(--color-night-white);
-  color: var(--color-deep-plum);
-  box-shadow: 0 1px 3px rgba(66, 43, 66, 0.2);
+  background-color: var(--color-birth-star);
+  color: var(--color-vantablack);
+  box-shadow: 0 1px 3px rgba(2, 1, 1, 0.2);
 }
 
 /* Gradient Text */
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-elysium-gold), var(--color-viola), var(--color-royal-lilac));
+  background: linear-gradient(135deg, var(--color-peach-fury), var(--color-priceless-coral), var(--color-patchwork-plum));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -206,37 +206,37 @@ body {
 
 /* Hero Section */
 .hero-section {
-  background: linear-gradient(135deg, var(--color-deep-plum) 0%, var(--color-royal-lilac) 100%);
-  color: var(--color-night-white);
+  background: linear-gradient(135deg, var(--color-vantablack) 0%, var(--color-patchwork-plum) 100%);
+  color: var(--color-birth-star);
   padding: 5rem 0;
 }
 
 /* Footer */
 .footer {
-  background-color: var(--color-deep-plum);
-  color: var(--color-night-white);
-  border-top: 1px solid var(--color-cookie-dough);
+  background-color: var(--color-vantablack);
+  color: var(--color-birth-star);
+  border-top: 1px solid var(--color-desert-mesa);
 }
 
 /* Utility Classes */
 .border-accent {
-  border-color: var(--color-elysium-gold);
+  border-color: var(--color-peach-fury);
 }
 
 .border-muted {
-  border-color: var(--color-cookie-dough);
+  border-color: var(--color-desert-mesa);
 }
 
 .border-light {
-  border-color: var(--color-night-white);
+  border-color: var(--color-desert-mesa);
 }
 
 .shadow-card {
-  box-shadow: 0 2px 8px rgba(66, 43, 66, 0.08);
+  box-shadow: 0 2px 8px rgba(2, 1, 1, 0.08);
 }
 
 .shadow-elevated {
-  box-shadow: 0 4px 12px rgba(66, 43, 66, 0.12);
+  box-shadow: 0 4px 12px rgba(2, 1, 1, 0.12);
 }
 
 .transition-smooth {
@@ -245,7 +245,7 @@ body {
 
 /* Dividers */
 .divider {
-  border-top: 1px solid var(--color-cookie-dough);
+  border-top: 1px solid var(--color-desert-mesa);
   opacity: 0.3;
 }
 
@@ -318,11 +318,3 @@ body {
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}

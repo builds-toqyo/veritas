@@ -81,7 +81,7 @@ export function RiskDashboard() {
       
       <TabsContent value="overview" className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-card border-light shadow-card rounded-lg p-6">
+          <Card className="bg-card border-muted shadow-card rounded-lg p-6">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-primary">Risk Score</CardTitle>
             </CardHeader>
@@ -98,7 +98,7 @@ export function RiskDashboard() {
               </p>
             </CardContent>
           </Card>
-          <Card className="bg-card border-light shadow-card rounded-lg p-6">
+          <Card className="bg-card border-muted shadow-card rounded-lg p-6">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-primary">Liquidity Score</CardTitle>
             </CardHeader>

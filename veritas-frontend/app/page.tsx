@@ -13,7 +13,7 @@ export default function Home() {
         <StatsSection />
         <FeaturesSection />
 
-        <section className="py-32 relative bg-light border-t border-light">
+        <section className="py-32 relative bg-light border-t border-muted">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5 bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
           <div className="container max-w-6xl mx-auto px-4 flex flex-col items-center text-center">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-primary">
