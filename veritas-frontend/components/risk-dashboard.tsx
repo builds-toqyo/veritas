@@ -58,25 +58,22 @@ export function RiskDashboard() {
 
   return (
     <Tabs defaultValue="overview" className="w-full">
-      <TabsList style={{backgroundColor: '#aaa4a5'}}>
+      <TabsList className="tabs-list">
         <TabsTrigger 
           value="overview" 
-          className="data-[state=active]:text-white"
-          style={{color: '#635a5e'}}
+          className="tab-trigger"
         >
           Overview
         </TabsTrigger>
         <TabsTrigger 
           value="scenarios" 
-          className="data-[state=active]:text-white"
-          style={{color: '#635a5e'}}
+          className="tab-trigger"
         >
           Scenario Analysis
         </TabsTrigger>
         <TabsTrigger 
           value="health" 
-          className="data-[state=active]:text-white"
-          style={{color: '#635a5e'}}
+          className="tab-trigger"
         >
           System Health
         </TabsTrigger>
@@ -84,36 +81,36 @@ export function RiskDashboard() {
       
       <TabsContent value="overview" className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card style={{backgroundColor: '#030303', borderColor: '#635a5e'}}>
+          <Card className="card shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium" style={{color: '#f7e9e9'}}>Risk Score</CardTitle>
+              <CardTitle className="text-sm font-medium card-title">Risk Score</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" style={{color: '#f7e9e9'}}>
+              <div className="text-2xl font-bold text-primary">
                 {riskData ? riskData.risk_score.toFixed(2) : '-'}
               </div>
               <Progress 
                 value={riskData ? riskData.risk_score * 100 : 0} 
                 className="mt-2" 
               />
-              <p className="text-xs mt-2" style={{color: '#aaa4a5'}}>
+              <p className="text-xs mt-2 text-muted">
                 Updated {new Date(riskData?.timestamp || '').toLocaleTimeString()}
               </p>
             </CardContent>
           </Card>
-          <Card style={{backgroundColor: '#030303', borderColor: '#635a5e'}}>
+          <Card className="card shadow-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium" style={{color: '#f7e9e9'}}>Liquidity Score</CardTitle>
+              <CardTitle className="text-sm font-medium card-title">Liquidity Score</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" style={{color: '#f7e9e9'}}>
+              <div className="text-2xl font-bold text-primary">
                 {riskData ? riskData.liquidity_score.toFixed(2) : '-'}
               </div>
               <Progress 
                 value={riskData ? riskData.liquidity_score * 100 : 0} 
                 className="mt-2" 
               />
-              <p className="text-xs mt-2" style={{color: '#aaa4a5'}}>
+              <p className="text-xs mt-2 text-muted">
                 Updated {new Date(riskData?.timestamp || '').toLocaleTimeString()}
               </p>
             </CardContent>
