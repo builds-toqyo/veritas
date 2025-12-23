@@ -27,11 +27,11 @@ body {
 }
 
 .text-secondary {
-  color: var(--color-viola);
+  color: var(--color-royal-lilac);
 }
 
 .text-muted {
-  color: var(--color-cookie-dough);
+  color: var(--color-royal-lilac);
 }
 
 .text-accent {
@@ -40,6 +40,15 @@ body {
 
 .text-light {
   color: var(--color-night-white);
+}
+
+.text-link {
+  color: var(--color-viola);
+  text-decoration: none;
+}
+
+.text-link:hover {
+  text-decoration: underline;
 }
 
 /* Background Classes */
@@ -64,8 +73,12 @@ body {
 }
 
 .bg-surface {
-  background-color: var(--color-night-white);
-  border: 1px solid var(--color-cookie-dough);
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-night-white);
+}
+
+.bg-card {
+  background-color: #FFFFFF;
 }
 
 /* Button Classes */
@@ -103,11 +116,11 @@ body {
 
 /* Card Classes */
 .card {
-  background-color: var(--color-night-white);
-  border: 1px solid var(--color-cookie-dough);
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-night-white);
   border-radius: var(--radius-default);
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(66, 43, 66, 0.1);
+  box-shadow: 0 2px 8px rgba(66, 43, 66, 0.08);
 }
 
 .card-header {
@@ -122,7 +135,7 @@ body {
 }
 
 .card-description {
-  color: var(--color-cookie-dough);
+  color: var(--color-royal-lilac);
   font-size: 0.875rem;
 }
 
@@ -214,12 +227,26 @@ body {
   border-color: var(--color-cookie-dough);
 }
 
+.border-light {
+  border-color: var(--color-night-white);
+}
+
 .shadow-card {
-  box-shadow: 0 4px 12px rgba(66, 43, 66, 0.15);
+  box-shadow: 0 2px 8px rgba(66, 43, 66, 0.08);
+}
+
+.shadow-elevated {
+  box-shadow: 0 4px 12px rgba(66, 43, 66, 0.12);
 }
 
 .transition-smooth {
   transition: all 0.3s ease;
+}
+
+/* Dividers */
+.divider {
+  border-top: 1px solid var(--color-cookie-dough);
+  opacity: 0.3;
 }
 
 :root {

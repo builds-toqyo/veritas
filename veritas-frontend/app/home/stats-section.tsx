@@ -5,7 +5,7 @@ import { fadeIn } from '@/lib/animations';
 
 export function StatsSection() {
   return (
-    <section className='border-y border-muted bg-light py-20'>
+    <section className='border-y border-light bg-light py-20'>
       <div className='container max-w-6xl mx-auto px-4'>
         <div className='mx-auto grid gap-16 md:grid-cols-3 max-w-4xl'>
           <motion.div 

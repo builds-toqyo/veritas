@@ -13,14 +13,13 @@ export default function Home() {
         <StatsSection />
         <FeaturesSection />
 
-        {/* CTA Section */}
-        <section className="py-32 relative bg-primary border-t border-muted">
+        <section className="py-32 relative bg-light border-t border-light">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5 bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
           <div className="container max-w-6xl mx-auto px-4 flex flex-col items-center text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-light">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-primary">
               Ready to enhance your risk management?
             </h2>
-            <p className="mt-4 max-w-2xl text-lg text-light opacity-80">
+            <p className="mt-4 max-w-2xl text-lg text-muted">
               Get started with Veritas today and access enterprise-grade risk assessment tools.
             </p>
             <Button 

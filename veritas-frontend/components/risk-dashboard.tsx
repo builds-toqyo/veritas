@@ -81,9 +81,9 @@ export function RiskDashboard() {
       
       <TabsContent value="overview" className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="card shadow-card">
+          <Card className="bg-card border-light shadow-card rounded-lg p-6">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium card-title">Risk Score</CardTitle>
+              <CardTitle className="text-sm font-medium text-primary">Risk Score</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">
@@ -93,14 +93,14 @@ export function RiskDashboard() {
                 value={riskData ? riskData.risk_score * 100 : 0} 
                 className="mt-2" 
               />
-              <p className="text-xs mt-2 text-muted">
+              <p className="text-xs mt-2 text-secondary">
                 Updated {new Date(riskData?.timestamp || '').toLocaleTimeString()}
               </p>
             </CardContent>
           </Card>
-          <Card className="card shadow-card">
+          <Card className="bg-card border-light shadow-card rounded-lg p-6">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium card-title">Liquidity Score</CardTitle>
+              <CardTitle className="text-sm font-medium text-primary">Liquidity Score</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">
@@ -110,7 +110,7 @@ export function RiskDashboard() {
                 value={riskData ? riskData.liquidity_score * 100 : 0} 
                 className="mt-2" 
               />
-              <p className="text-xs mt-2 text-muted">
+              <p className="text-xs mt-2 text-secondary">
                 Updated {new Date(riskData?.timestamp || '').toLocaleTimeString()}
               </p>
             </CardContent>
