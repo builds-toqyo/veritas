@@ -3,16 +3,24 @@ import { Button } from "@/components/ui/button";
 
 export function Nav() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white">
+      <div className="container max-w-6xl mx-auto px-4 flex h-16 items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/" className="font-bold">Veritas</Link>
+          <Link href="/" className="text-xl font-bold text-black hover:text-neutral-800">
+            Veritas
+          </Link>
         </div>
-        <nav className="flex items-center space-x-4">
-          <Link href="/dashboard" className="text-sm font-medium hover:text-primary">
+        <nav className="flex items-center space-x-6">
+          <Link 
+            href="/dashboard" 
+            className="text-sm font-medium text-neutral-600 hover:text-black"
+          >
             Dashboard
           </Link>
-          <Button asChild variant="outline">
+          <Button 
+            asChild 
+            className="bg-black text-white hover:bg-neutral-800"
+          >
             <Link href="/dashboard">Launch App</Link>
           </Button>
         </nav>
