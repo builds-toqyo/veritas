@@ -1,3 +1,4 @@
+// Package keeper implements the Veritas keeper bot core functionality
 package keeper
 
 import (
@@ -6,10 +7,8 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/big"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -22,15 +21,31 @@ import (
 
 // Config holds all configuration for the keeper bot
 type Config struct {
-	MantleRPC             string
-	ChainID               int64
-	PrivateKey            string
-	MLAPIEndpoint         string
+	// Network settings
+	MantleRPC string
+	ChainID   int64
+
+	// Contract addresses
 	LeveragedStrategyAddr string
 	InvoiceTokenAddr      string
 	KYCVerifierAddr       string
-	MaxGasPrice           *big.Int
-	GasLimit              uint64
+
+	// ML Engine settings
+	MLAPIEndpoint string
+
+	// Gas settings
+	MaxGasPrice *big.Int
+	GasLimit    uint64
+
+	// Private key for transactions
+	PrivateKey string
+
+	// Risk thresholds
+	CriticalRisk    float64
+	HighRisk        float64
+	MaxLTV          float64
+	MinHealthFactor float64
+	MinLiquidity    float64
 }
 
 // MLResponses for different endpoints
@@ -58,8 +73,8 @@ type NAVPredictionResponse struct {
 	Timestamp              int64   `json:"timestamp"`
 }
 
-// VeritasKeeper main keeper bot struct
-type VeritasKeeper struct {
+// Bot represents the Veritas keeper bot
+type Bot struct {
 	config        *Config
 	client        *ethclient.Client
 	privateKey    *ecdsa.PrivateKey
@@ -69,10 +84,15 @@ type VeritasKeeper struct {
 	httpClient    *http.Client
 	cron          *cron.Cron
 	emergencyMode bool
+
+	// Contract instances (would use generated bindings)
+	leveragedStrategy common.Address
+	invoiceToken      common.Address
+	kycVerifier       common.Address
 }
 
-// NewVeritasKeeper creates a new keeper bot instance
-func NewVeritasKeeper(config *Config) (*VeritasKeeper, error) {
+// New creates a new keeper bot instance
+func New(config *Config) (*Bot, error) {
 	client, err := ethclient.Dial(config.MantleRPC)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to Mantle: %w", err)
@@ -91,7 +111,7 @@ func NewVeritasKeeper(config *Config) (*VeritasKeeper, error) {
 	logger.SetFormatter(&logrus.JSONFormatter{})
 	logger.SetLevel(logrus.InfoLevel)
 
-	return &VeritasKeeper{
+	return &Bot{
 		config:        config,
 		client:        client,
 		privateKey:    privateKey,
@@ -101,6 +121,11 @@ func NewVeritasKeeper(config *Config) (*VeritasKeeper, error) {
 		httpClient:    &http.Client{Timeout: 30 * time.Second},
 		cron:          cron.New(),
 		emergencyMode: false,
+
+		// Initialize contract addresses
+		leveragedStrategy: common.HexToAddress(config.LeveragedStrategyAddr),
+		invoiceToken:      common.HexToAddress(config.InvoiceTokenAddr),
+		kycVerifier:       common.HexToAddress(config.KYCVerifierAddr),
 	}, nil
 }
 
@@ -368,100 +393,44 @@ func (k *VeritasKeeper) HealthCheck(ctx context.Context) error {
 }
 
 // Start starts the keeper bot with scheduled tasks
-func (k *VeritasKeeper) Start(ctx context.Context) error {
-	k.logger.Info("Starting Veritas Keeper Bot...")
-	k.logger.WithField("address", k.address.Hex()).Info("Keeper address")
+func (b *Bot) Start(ctx context.Context) error {
+	b.logger.Info("Starting Veritas Keeper Bot...")
+	b.logger.WithField("address", b.address.Hex()).Info("Keeper address")
 
 	// Schedule tasks
-	k.cron.AddFunc("*/5 * * * *", func() { // Every 5 minutes
-		if err := k.MonitorLeverageStrategy(ctx); err != nil {
-			k.logger.WithError(err).Error("Leverage monitoring failed")
+	b.cron.AddFunc("*/5 * * * *", func() { // Every 5 minutes
+		if err := b.MonitorLeverageStrategy(ctx); err != nil {
+			b.logger.WithError(err).Error("Leverage monitoring failed")
 		}
 	})
 
-	k.cron.AddFunc("*/30 * * * *", func() { // Every 30 minutes
-		if err := k.UpdateInvoiceNAV(ctx); err != nil {
-			k.logger.WithError(err).Error("NAV update failed")
+	b.cron.AddFunc("*/30 * * * *", func() { // Every 30 minutes
+		if err := b.UpdateInvoiceNAV(ctx); err != nil {
+			b.logger.WithError(err).Error("NAV update failed")
 		}
 	})
 
-	k.cron.AddFunc("*/15 * * * *", func() { // Every 15 minutes
-		if err := k.MonitorKYCCompliance(ctx); err != nil {
-			k.logger.WithError(err).Error("KYC monitoring failed")
+	b.cron.AddFunc("*/15 * * * *", func() { // Every 15 minutes
+		if err := b.MonitorKYCCompliance(ctx); err != nil {
+			b.logger.WithError(err).Error("KYC monitoring failed")
 		}
 	})
 
-	k.cron.AddFunc("0 * * * *", func() { // Every hour
-		if err := k.HealthCheck(ctx); err != nil {
-			k.logger.WithError(err).Error("Health check failed")
+	b.cron.AddFunc("0 * * * *", func() { // Every hour
+		if err := b.HealthCheck(ctx); err != nil {
+			b.logger.WithError(err).Error("Health check failed")
 		}
 	})
 
 	// Start cron scheduler
-	k.cron.Start()
+	b.cron.Start()
 
 	// Initial health check
-	k.HealthCheck(ctx)
+	b.HealthCheck(ctx)
 
 	// Keep running
-	select {
-	case <-ctx.Done():
-		k.logger.Info("Keeper bot shutting down...")
-		k.cron.Stop()
-		return ctx.Err()
-	}
-}
-
-func LoadConfig() *Config {
-	return &Config{
-		MantleRPC:             getEnv("MANTLE_RPC", "https://rpc.mantle.xyz"),
-		ChainID:               5000,
-		PrivateKey:            os.Getenv("KEEPER_PRIVATE_KEY"),
-		MLAPIEndpoint:         getEnv("ML_API_ENDPOINT", "http://localhost:5000"),
-		LeveragedStrategyAddr: getEnv("LEVERAGED_STRATEGY_ADDR", "0x..."),
-		InvoiceTokenAddr:      getEnv("INVOICE_TOKEN_ADDR", "0x..."),
-		KYCVerifierAddr:       getEnv("KYC_VERIFIER_ADDR", "0x..."),
-		MaxGasPrice:           big.NewInt(5000000000), // 5 Gwei
-		GasLimit:              500000,
-	}
-}
-
-func getEnv(key, defaultVal string) string {
-	if val := os.Getenv(key); val != "" {
-		return val
-	}
-	return defaultVal
-}
-
-func main() {
-	config := LoadConfig()
-
-	if config.PrivateKey == "" {
-		log.Fatal("KEEPER_PRIVATE_KEY environment variable required")
-	}
-
-	keeper, err := NewVeritasKeeper(config)
-	if err != nil {
-		log.Fatalf("Failed to initialize keeper: %v", err)
-	}
-
-	ctx := context.Background()
-
-	// Start health server
-	go func() {
-		http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(map[string]string{
-				"status": "healthy",
-				"time":   time.Now().Format(time.RFC3339),
-			})
-		})
-		log.Println("Health server starting on :8080")
-		log.Fatal(http.ListenAndServe(":8080", nil))
-	}()
-
-	// Start keeper bot
-	if err := keeper.Start(ctx); err != nil {
-		log.Fatalf("Keeper bot error: %v", err)
-	}
+	<-ctx.Done()
+	b.logger.Info("Keeper bot shutting down...")
+	b.cron.Stop()
+	return ctx.Err()
 }
