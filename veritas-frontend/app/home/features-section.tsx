@@ -6,7 +6,7 @@ import { fadeIn, stagger } from '@/lib/animations';
 
 export function FeaturesSection() {
   return (
-    <section className='py-20 bg-[#373b3b]/5'>
+    <section className='py-20 bg-light'>
       <motion.div 
         initial='initial'
         whileInView='animate'
@@ -17,13 +17,13 @@ export function FeaturesSection() {
         <div className='mx-auto mb-16 max-w-3xl text-center'>
           <motion.h2 
             variants={fadeIn}
-            className='text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl'
+            className='text-3xl font-bold tracking-tight text-primary sm:text-4xl lg:text-5xl'
           >
             Enterprise-Grade Risk Management
           </motion.h2>
           <motion.p 
             variants={fadeIn}
-            className='mt-6 text-lg text-[#373b3b] max-w-2xl mx-auto'
+            className='mt-6 text-lg text-muted max-w-2xl mx-auto'
           >
             Comprehensive suite of tools powered by advanced machine learning algorithms
           </motion.p>
@@ -47,15 +47,15 @@ export function FeaturesSection() {
             }
           ].map((feature, index) => (
             <motion.div key={index} variants={fadeIn}>
-              <Card className='border-2 border-[#373b3b]/20 bg-black'>
+              <Card className='card shadow-card'>
                 <CardHeader>
-                  <CardTitle className='text-white'>{feature.title}</CardTitle>
-                  <CardDescription className='text-[#373b3b]'>
+                  <CardTitle className='card-title'>{feature.title}</CardTitle>
+                  <CardDescription className='card-description'>
                     {feature.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ul className='list-inside list-disc space-y-2 text-[#373b3b]'>
+                  <ul className='list-inside list-disc space-y-2 text-muted'>
                     {feature.features.map((item, i) => (
                       <li key={i}>{item}</li>
                     ))}
