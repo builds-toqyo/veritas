@@ -1,8 +1,3 @@
-"""
-Veritas ML Engine - LSTM-based RWA Risk Prediction
-Predicts default risk and liquidity scores for tokenized invoices/bonds
-"""
-
 import numpy as np
 import pandas as pd
 import torch
@@ -292,6 +287,217 @@ def scenario_analysis(scenario):
         'scenario': scenario,
         'prediction': prediction
     })
+
+@app.route('/api/v1/leverage-health', methods=['POST'])
+def assess_leverage_health():
+    """
+    Assess health of leveraged RWA strategy position
+    Called by keeper bot to monitor LeveragedRWAStrategy contract
+    """
+    try:
+        data = request.get_json()
+        
+        # Extract position data from smart contract
+        total_collateral = data.get('totalCollateral', 0)
+        total_borrowed = data.get('totalBorrowed', 0)
+        current_health_factor = data.get('currentHealthFactor', 0)
+        ait_value = data.get('aitValue', 0)
+        
+        # Calculate current LTV
+        ltv = (total_borrowed / total_collateral) if total_collateral > 0 else 0
+        
+        # Get current market risk assessment
+        market_prediction = ml_engine.predict()
+        
+        # Calculate position-specific risk
+        position_risk = {
+            'ltv_risk': min(1.0, ltv / 0.7),  # Risk increases as LTV approaches 70%
+            'health_factor_risk': max(0.0, 1.0 - (current_health_factor / 1.5)),
+            'market_risk': market_prediction['risk_score'],
+            'liquidity_risk': 1.0 - market_prediction['liquidity_score']
+        }
+        
+        # Weighted composite risk score
+        composite_risk = (
+            position_risk['ltv_risk'] * 0.3 +
+            position_risk['health_factor_risk'] * 0.3 +
+            position_risk['market_risk'] * 0.25 +
+            position_risk['liquidity_risk'] * 0.15
+        )
+        
+        # Risk thresholds
+        risk_level = 'LOW'
+        action_required = False
+        
+        if composite_risk > 0.8:
+            risk_level = 'CRITICAL'
+            action_required = True
+        elif composite_risk > 0.6:
+            risk_level = 'HIGH'
+            action_required = True
+        elif composite_risk > 0.4:
+            risk_level = 'MEDIUM'
+        
+        # Recommendations
+        recommendations = []
+        if ltv > 0.65:
+            recommendations.append('REDUCE_LEVERAGE')
+        if current_health_factor < 1.3:
+            recommendations.append('EMERGENCY_DELEVERAGE')
+        if market_prediction['liquidity_score'] < 0.3:
+            recommendations.append('PAUSE_NEW_POSITIONS')
+        
+        return jsonify({
+            'composite_risk_score': composite_risk,
+            'risk_level': risk_level,
+            'action_required': action_required,
+            'position_metrics': {
+                'ltv': ltv,
+                'health_factor': current_health_factor,
+                'ait_value_usd': ait_value,
+                'exposure_ratio': (ait_value / total_borrowed) if total_borrowed > 0 else 0
+            },
+            'risk_breakdown': position_risk,
+            'recommendations': recommendations,
+            'timestamp': int(datetime.now().timestamp())
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/v1/kyc-risk-assessment', methods=['POST'])
+def assess_kyc_risk():
+    """
+    ML-based KYC risk assessment for investor verification
+    Analyzes patterns to detect potential fraud or compliance issues
+    """
+    try:
+        data = request.get_json()
+        
+        # Extract KYC data
+        investor_data = {
+            'investment_amount': data.get('investmentAmount', 0),
+            'tier': data.get('tier', 0),
+            'jurisdiction': data.get('jurisdiction', ''),
+            'transaction_frequency': data.get('transactionFrequency', 0),
+            'wallet_age_days': data.get('walletAgeDays', 0),
+            'previous_defi_exposure': data.get('previousDefiExposure', 0)
+        }
+        
+        # Risk scoring based on patterns
+        risk_factors = {
+            'amount_risk': min(1.0, investor_data['investment_amount'] / 1000000),  # Risk increases with amount
+            'velocity_risk': min(1.0, investor_data['transaction_frequency'] / 100),
+            'wallet_risk': max(0.0, 1.0 - (investor_data['wallet_age_days'] / 365)),  # Newer wallets = higher risk
+            'jurisdiction_risk': 0.1 if investor_data['jurisdiction'] in ['US', 'EU', 'UK'] else 0.3
+        }
+        
+        # Composite KYC risk score
+        kyc_risk_score = (
+            risk_factors['amount_risk'] * 0.3 +
+            risk_factors['velocity_risk'] * 0.2 +
+            risk_factors['wallet_risk'] * 0.3 +
+            risk_factors['jurisdiction_risk'] * 0.2
+        )
+        
+        # Risk classification
+        if kyc_risk_score > 0.7:
+            risk_classification = 'HIGH_RISK'
+            verification_required = True
+        elif kyc_risk_score > 0.4:
+            risk_classification = 'MEDIUM_RISK'
+            verification_required = True
+        else:
+            risk_classification = 'LOW_RISK'
+            verification_required = False
+        
+        # Compliance flags
+        flags = []
+        if investor_data['investment_amount'] > 500000:
+            flags.append('LARGE_INVESTMENT')
+        if investor_data['wallet_age_days'] < 30:
+            flags.append('NEW_WALLET')
+        if investor_data['transaction_frequency'] > 50:
+            flags.append('HIGH_VELOCITY')
+        
+        return jsonify({
+            'kyc_risk_score': kyc_risk_score,
+            'risk_classification': risk_classification,
+            'verification_required': verification_required,
+            'risk_factors': risk_factors,
+            'compliance_flags': flags,
+            'recommended_tier': min(investor_data['tier'], 2 if kyc_risk_score > 0.5 else 4),
+            'timestamp': int(datetime.now().timestamp())
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/v1/invoice-nav-prediction', methods=['POST'])
+def predict_invoice_nav():
+    """
+    Predict future NAV for VeritasInvoiceToken based on invoice pool health
+    Used by oracle to update NAV and by strategy for yield forecasting
+    """
+    try:
+        data = request.get_json()
+        
+        # Extract invoice pool data
+        pool_data = {
+            'total_face_value': data.get('totalFaceValue', 0),
+            'number_of_invoices': data.get('numberOfInvoices', 0),
+            'weighted_maturity': data.get('weightedMaturity', 0),
+            'expected_yield': data.get('expectedYield', 0),
+            'current_default_rate': data.get('defaultRate', 0),
+            'realized_yield': data.get('realizedYield', 0)
+        }
+        
+        # Get market risk assessment
+        market_risk = ml_engine.predict()
+        
+        # Calculate expected collection rate
+        base_collection_rate = 1.0 - pool_data['current_default_rate']
+        market_adjusted_rate = base_collection_rate * (1.0 - market_risk['risk_score'] * 0.3)
+        
+        # Predict future NAV based on collection expectations
+        expected_collections = pool_data['total_face_value'] * market_adjusted_rate
+        predicted_nav = expected_collections / data.get('totalSupply', 1)
+        
+        # Calculate confidence based on pool diversification
+        diversification_score = min(1.0, pool_data['number_of_invoices'] / 100)
+        maturity_risk = min(1.0, pool_data['weighted_maturity'] / 180)
+        
+        confidence = (
+            diversification_score * 0.4 +
+            (1.0 - maturity_risk) * 0.3 +
+            market_risk['confidence'] * 0.3
+        )
+        
+        # Risk-adjusted yield prediction
+        risk_adjusted_yield = pool_data['expected_yield'] * (1.0 - market_risk['risk_score'] * 0.5)
+        
+        return jsonify({
+            'predicted_nav': predicted_nav,
+            'confidence': confidence,
+            'expected_collection_rate': market_adjusted_rate,
+            'risk_adjusted_yield': risk_adjusted_yield,
+            'pool_health_score': 1.0 - market_risk['risk_score'],
+            'diversification_score': diversification_score,
+            'market_risk_impact': market_risk['risk_score'],
+            'timestamp': int(datetime.now().timestamp())
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
 
 def train_model(epochs: int = 50, batch_size: int = 32):
     """
